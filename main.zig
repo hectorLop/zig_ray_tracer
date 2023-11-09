@@ -18,14 +18,14 @@ fn circle_at_origin() [48][64]u8 {
     const radius = 5;
     var curr_point: Point = undefined;
 
-    for (0..48) |x| {
-        for (0..64) |y| {
+    for (0..48) |y| {
+        for (0..64) |x| {
             curr_point = Point{ .x = @intCast(x), .y = @intCast(y) };
 
             if (is_inside_circle(curr_point, radius)) {
-                array[x][y] = '.';
+                array[y][x] = '.';
             } else {
-                array[x][y] = 'x';
+                array[y][x] = 'x';
             }
         }
     }
@@ -34,7 +34,7 @@ fn circle_at_origin() [48][64]u8 {
 }
 
 fn is_inside_circle(point: Point, radius: i16) bool {
-    const center = Point{ .y = 31, .x = 24 };
+    const center = Point{ .x = 31, .y = 24 };
     const x: i16 = point.x - center.x;
     const y: i16 = point.y - center.y;
 
