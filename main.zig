@@ -1,7 +1,17 @@
 const std = @import("std");
 
 const Point = struct { x: i16, y: i16 };
-const Circle = struct { center: Point, radius: i16 };
+const Circle = struct {
+    center: Point,
+    radius: i16,
+    fn contains(self: *Circle, point: Point) bool {
+        const x: i16 = point.x - self.center.x;
+        const y: i16 = point.y - self.center.y;
+
+        const result = std.math.pow(i16, x, 2) + std.math.pow(i16, y, 2);
+        return result <= std.math.pow(i16, self.radius, 2);
+    }
+};
 
 const Image = struct {
     width: usize,
@@ -20,7 +30,7 @@ const Image = struct {
             for (0..self.width) |x| {
                 curr_point = Point{ .x = @intCast(x), .y = @intCast(y) };
 
-                if (is_inside_circle(curr_point, self.circle)) {
+                if (self.circle.contains(curr_point)) {
                     matrix[y][x] = '.';
                 } else {
                     matrix[y][x] = 'x';
@@ -42,22 +52,27 @@ pub fn main() !void {
     var data: [][]u8 = try image.draw_image(&allocator);
     defer allocator.free(data);
 
-    print_image(&image, data);
+    //for (0..image.height) |y| {
+    //    for (0..image.width) |x| {
+    //        std.debug.print("{u}", .{data[y][x]});
+    //    }
+    //    std.debug.print("\n", .{});
+    //}
+    try save(&image, data);
 }
 
-fn print_image(image: *Image, data: [][]u8) void {
-    for (0..image.height) |y| {
-        for (0..image.width) |x| {
-            std.debug.print("{u}", .{data[y][x]});
-        }
-        std.debug.print("\n", .{});
-    }
+fn save(image: *Image, data: [][]u8) !void {
+    _ = data;
+    const file = try std.fs.cwd().createFile("test.ppm", .{ .read = true, .truncate = true });
+    defer file.close();
+
+    _ = try file.writeAll("P3\n");
+
+    var buf: [6]u8 = undefined;
+    const size = try std.fmt.bufPrint(&buf, "{} {}\n", .{ image.width, image.height });
+    _ = try file.writeAll(size);
 }
 
-fn is_inside_circle(point: Point, circle: Circle) bool {
-    const x: i16 = point.x - circle.center.x;
-    const y: i16 = point.y - circle.center.y;
-
-    const result = std.math.pow(i16, x, 2) + std.math.pow(i16, y, 2);
-    return result <= std.math.pow(i16, circle.radius, 2);
+fn intToString(int: usize, buf: []u8) ![]const u8 {
+    return try std.fmt.bufPrint(buf, "{}", .{int});
 }
