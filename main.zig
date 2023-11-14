@@ -62,7 +62,6 @@ pub fn main() !void {
 }
 
 fn save(image: *Image, data: [][]u8) !void {
-    _ = data;
     const file = try std.fs.cwd().createFile("test.ppm", .{ .read = true, .truncate = true });
     defer file.close();
 
@@ -71,6 +70,18 @@ fn save(image: *Image, data: [][]u8) !void {
     var buf: [6]u8 = undefined;
     const size = try std.fmt.bufPrint(&buf, "{} {}\n", .{ image.width, image.height });
     _ = try file.writeAll(size);
+    _ = try file.writeAll("255\n");
+
+    for (0..image.height) |y| {
+        for (0..image.width) |x| {
+            if (data[y][x] == '.') {
+                _ = try file.writeAll("255 255 255 ");
+            } else {
+                _ = try file.writeAll("  0   0   0 ");
+            }
+        }
+        _ = try file.writeAll("\n");
+    }
 }
 
 fn intToString(int: usize, buf: []u8) ![]const u8 {
