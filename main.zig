@@ -52,17 +52,11 @@ pub fn main() !void {
     var data: [][]u8 = try image.draw_image(&allocator);
     defer allocator.free(data);
 
-    //for (0..image.height) |y| {
-    //    for (0..image.width) |x| {
-    //        std.debug.print("{u}", .{data[y][x]});
-    //    }
-    //    std.debug.print("\n", .{});
-    //}
-    try save(&image, data);
+    try save_p3(&image, data);
 }
 
-fn save(image: *Image, data: [][]u8) !void {
-    const file = try std.fs.cwd().createFile("test.ppm", .{ .read = true, .truncate = true });
+fn save_p3(image: *Image, data: [][]u8) !void {
+    const file = try std.fs.cwd().createFile("test_p3.ppm", .{ .read = true, .truncate = true });
     defer file.close();
 
     _ = try file.writeAll("P3\n");
@@ -75,12 +69,11 @@ fn save(image: *Image, data: [][]u8) !void {
     for (0..image.height) |y| {
         for (0..image.width) |x| {
             if (data[y][x] == '.') {
-                _ = try file.writeAll("255 255 255 ");
+                _ = try file.writeAll("255 255 255\n");
             } else {
-                _ = try file.writeAll("  0   0   0 ");
+                _ = try file.writeAll("  0   0   0\n");
             }
         }
-        _ = try file.writeAll("\n");
     }
 }
 
