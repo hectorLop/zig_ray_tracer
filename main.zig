@@ -1,4 +1,5 @@
 const std = @import("std");
+const ppm = @import("ppm.zig");
 
 const Point = struct { x: i16, y: i16 };
 const Circle = struct {
@@ -13,7 +14,7 @@ const Circle = struct {
     }
 };
 
-const Image = struct {
+pub const Image = struct {
     width: usize,
     height: usize,
     circle: Circle,
@@ -52,55 +53,5 @@ pub fn main() !void {
     var data: [][]u8 = try image.draw_image(&allocator);
     defer allocator.free(data);
 
-    try save_p6(&image, data);
-}
-
-fn save_p3(image: *Image, data: [][]u8) !void {
-    const file = try std.fs.cwd().createFile("test_p3.ppm", .{ .read = true, .truncate = true });
-    defer file.close();
-
-    _ = try file.writeAll("P3\n");
-
-    var buf: [6]u8 = undefined;
-    const size = try std.fmt.bufPrint(&buf, "{} {}\n", .{ image.width, image.height });
-    _ = try file.writeAll(size);
-    _ = try file.writeAll("255\n");
-
-    for (0..image.height) |y| {
-        for (0..image.width) |x| {
-            if (data[y][x] == '.') {
-                _ = try file.writeAll("255 255 255\n");
-            } else {
-                _ = try file.writeAll("  0   0   0\n");
-            }
-        }
-    }
-}
-
-fn save_p6(image: *Image, data: [][]u8) !void {
-    const file = try std.fs.cwd().createFile("test_p6.ppm", .{ .read = true, .truncate = true });
-    defer file.close();
-
-    _ = try file.writeAll("P6\n");
-
-    var buf: [6]u8 = undefined;
-    const size = try std.fmt.bufPrint(&buf, "{} {}\n", .{ image.width, image.height });
-    _ = try file.writeAll(size);
-    _ = try file.writeAll("255\n");
-
-    // In Zig, for embedding Hex into string literals we need to use the \x scape sequence
-    // In P6, all the bytes are written sequentially
-    for (0..image.height) |y| {
-        for (0..image.width) |x| {
-            if (data[y][x] == '.') {
-                _ = try file.writeAll("\xFF\xFF\xFF");
-            } else {
-                _ = try file.writeAll("\x00\x00\x00");
-            }
-        }
-    }
-}
-
-fn intToString(int: usize, buf: []u8) ![]const u8 {
-    return try std.fmt.bufPrint(buf, "{}", .{int});
+    try ppm.save("test_save.ppm", ppm.PPMType.p6, &image, data);
 }
