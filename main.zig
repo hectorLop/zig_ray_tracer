@@ -53,5 +53,5 @@ pub fn main() !void {
     var data: [][]u8 = try image.draw_image(&allocator);
     defer allocator.free(data);
 
-    try ppm.save("test_save.ppm", ppm.PPMType.p6, &image, data);
+    try ppm.save("test_save.ppm", ppm.PPMType.p6, image, data);
 }
