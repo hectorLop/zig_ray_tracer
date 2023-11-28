@@ -20,7 +20,7 @@ pub const PPMType = enum {
     }
 };
 
-pub fn save(filename: []const u8, ppm_type: PPMType, image: main.Image, data: [][]u8) !void {
+pub fn save(filename: []const u8, ppm_type: PPMType, image: main.Image) !void {
     const file = try std.fs.cwd().createFile(filename, .{ .read = true, .truncate = true });
     defer file.close();
 
@@ -31,7 +31,7 @@ pub fn save(filename: []const u8, ppm_type: PPMType, image: main.Image, data: []
 
     for (0..image.height) |y| {
         for (0..image.width) |x| {
-            switch (data[y][x]) {
+            switch (image.data[y][x]) {
                 '.' => try file.writeAll(black),
                 else => try file.writeAll(white),
             }
