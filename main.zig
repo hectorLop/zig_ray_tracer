@@ -46,6 +46,10 @@ pub const Image = struct {
 };
 
 pub fn main() !void {
+    const filename_allocator = std.heap.page_allocator;
+    const arguments = try parse_arguments(filename_allocator);
+    defer filename_allocator.free(arguments.filename);
+
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     var allocator = gpa.allocator();
 
@@ -57,5 +61,30 @@ pub fn main() !void {
     var image = Image{ .width = 64, .height = 48, .circle = circle, .data = data };
     defer allocator.free(data);
 
-    try ppm.save("test_save.ppm", ppm.PPMType.p6, image);
+    try ppm.save(arguments.filename, arguments.ppm_type, image);
+}
+
+const CLIError = error{ PPMTypeMissing, FilenameMissing, UnknownPPMType, FailureCreatingFilename };
+
+const Args = struct { ppm_type: ppm.PPMType, filename: []const u8 };
+
+fn parse_arguments(allocator: std.mem.Allocator) CLIError!Args {
+    var args = std.process.args();
+    _ = args.skip();
+
+    const first_arg = args.next() orelse return CLIError.PPMTypeMissing;
+    const ppm_type = std.meta.stringToEnum(ppm.PPMType, first_arg) orelse return CLIError.UnknownPPMType;
+
+    const filename = args.next() orelse return CLIError.FilenameMissing;
+    const extension = ".ppm";
+
+    if (!std.mem.endsWith(u8, filename, extension)) {
+        var new_filename = allocator.alloc(u8, filename.len + extension.len) catch return CLIError.FailureCreatingFilename;
+        _ = std.mem.copy(u8, new_filename[0..], filename);
+        _ = std.mem.copy(u8, new_filename[filename.len..], extension);
+
+        return Args{ .ppm_type = ppm_type, .filename = new_filename };
+    }
+    var new_filename = allocator.dupe(u8, filename) catch return CLIError.FailureCreatingFilename;
+    return Args{ .ppm_type = ppm_type, .filename = new_filename };
 }
