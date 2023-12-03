@@ -51,3 +51,19 @@ fn writeHeader(file: std.fs.File, ppm_type: PPMType, image: main.Image) !void {
     _ = try file.writeAll(size);
     _ = try file.writeAll("255\n");
 }
+
+test save {
+    const filename = "test_file.ppm";
+    const ppm_type = PPMType.p3;
+    var data: [][]u8 = &.{};
+    const image = main.Image{ .height = 0, .width = 0, .circle = undefined, .data = data };
+
+    defer std.fs.cwd().deleteFile(filename) catch {};
+    try save(filename, ppm_type, image);
+
+    var file_exists: bool = false;
+    if (std.fs.cwd().access(filename, .{})) {
+        file_exists = true;
+    } else |_| {}
+    try std.testing.expect(file_exists);
+}
